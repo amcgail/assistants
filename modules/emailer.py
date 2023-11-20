@@ -18,12 +18,13 @@ class SendEmail(Module):
         {
             'recipients': ['email address 1', 'email address 2'],
             'subject': 'subject of the email',
-            'message': 'body of the email',
+            'message': 'body of the email'
         }
     """
 
     def execute_it(self, args):
         send_email(args['recipients'], args['subject'], args['message'])
+        return "Email sent."
 
 import smtplib
 import imaplib

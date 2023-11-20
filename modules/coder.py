@@ -84,4 +84,4 @@ class CreateModule(Module):
 
         # now test the module
 
-        return True
+        return "Some sort of success, perhaps?"

@@ -3,16 +3,21 @@ from ..common import *
 from abc import ABC, abstractmethod
 
 class Module:
-    def get_prompt(self):
+    def get_prompt(self, meta_goal=None):
+        if meta_goal is None:
+            meta_goal = "improve Alec's life"
         p = flatten_whitespace(f"""
             You are a component of Alec McGail's helpful AI assistant, named the "{self.name}".
             The date and time right now is {dt.datetime.now().strftime("%Y-%m-%d %H:%M:%S")}.
-            Your goal is {self.goal}
+            Ultimately you are helping to "{meta_goal}"
+
+            You have been specifically tasked with the goal: "{self.goal}".
             
-            Your response must be JSON-formatted. Strings should be defined with ", never '. 
+            Your response must be JSON-formatted.
+            Always use double-quotes for keys and values.
             Lists CANNOT end in a comma.
-            Use the following as a template:
-            {self.params}
+
+            Your output must be defined according to the following template:\n{indent(flatten_whitespace(self.params), 14)}
         """)
 
         if hasattr(self, "detailed_instructions"):
@@ -20,10 +25,14 @@ class Module:
 
         return p
     
-    def contemplate(self, query):
-        prompt = self.get_prompt()
+    def contemplate(self, query, meta_goal=None):
+        prompt = self.get_prompt(meta_goal)
 
-        print('\n\n***** ', type(self).__name__, Path(self.__module__).stem, ' ******\n\n')
+        # get the name of the file where the subclass is defined
+        subclass_file = inspect.getfile(self.__class__)
+        subclass_file = Path(subclass_file).stem
+
+        print('\n\n***** ', type(self).__name__, 'in the', subclass_file, 'file ******\n\n')
 
         print( '--------- PROMPT ---------' )
         print(prompt)
@@ -68,7 +77,7 @@ class Module:
             failed = True
             info = f"Result was None."
 
-        if failed:
+        if False and failed:
             from .planner import Plan
             
             namespace = Path(self.__module__).stem

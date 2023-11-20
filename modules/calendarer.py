@@ -57,20 +57,23 @@ except HttpError as e:
 
 class Search(Module):
   name = "calendar searcher"
-  goal = "to search for events on Alec's calendar using a specific query"
+  goal = "to search for events on Alec's calendar"
   params = """
     {
-      'query': 'query to search for. shorter the better',
-      'maxResults': 'maximum number of results to return',
-      'orderBy': 'order the results by this field',
-      'singleEvents': 'whether to expand recurring events into instances',
-      'timeMin': 'only return events after this time',
-      'timeMax': 'only return events before this time',
+      "query": "search the title of the event (can use * as a wildcard)",
+      "timeMin": "2023-11-20T00:00:00-05:00",
+      "timeMax": "2023-11-20T23:59:59Z-05:00"
     }
   """
 
+  detailed_instructions = flatten_whitespace("""
+    Only give a query if you know exactly what you are looking for.
+  """)         
+
   def execute_it(self, args):
-    query = args['query']
+    from itertools import groupby
+
+    query = args['query'] if 'query' in args else '*'
     max_results = args.get('maxResults', 10)
     order_by = args.get('orderBy', 'startTime')
     single_events = args.get('singleEvents', True)
@@ -78,35 +81,56 @@ class Search(Module):
     time_max = args.get('timeMax', (dt.datetime.utcnow() + dt.timedelta(days=365)).isoformat() + 'Z')
 
     events = search_events(service, query, time_min, time_max)
-    return "\n".join([f"{event['start']['dateTime']} {event['summary']}" for event in events])
+
+    total_string = ''
+    all_day_events = [x for x in events if 'date' in x['start']]
+    timed_events = [x for x in events if 'dateTime' in x['start']]
+
+    # sort the events by start time
+    all_day_events = sorted(all_day_events, key=lambda x: x['start']['date'])
+    timed_events = sorted(timed_events, key=lambda x: x['start']['dateTime'])
+
+    def format_datetime(x):
+        x = dt.datetime.fromisoformat(x)
+        return x.strftime("%H:%M")
+    
+    total_string += "Timed Events Results:\n"
+    for date, g in groupby(timed_events, key=lambda x: x['start']['dateTime'][:10]):
+        day_of_week = dt.datetime.fromisoformat(date).strftime("%A")
+        total_string += f"{date} ({day_of_week})"
+        for event in g:
+            total_string += f"\n  {format_datetime(event['start']['dateTime'])} - {format_datetime(event['end']['dateTime'])} - {event['summary']}"
+
+    total_string += "\n\nAll Day Events Results:\n"
+    for event in all_day_events:
+        day_of_week = dt.datetime.fromisoformat(event['start']['date']).strftime("%A")
+        day_of_week_end = dt.datetime.fromisoformat(event['end']['date']).strftime("%A")
+        total_string += f"{event['start']['date']} ({day_of_week}) - {event['summary']}\n"
+
+    return total_string
 
 class NewEvent(Module):
   name = "event creator"
-  goal = "to create a new event on your calendar. Invite amcgail2@gmail.com."
-  detailed_instructions = """
-        Known email addresses:
-        - Mom: bajap123@gmail.com
-        - Dad: bajap21@gmail.com
-        - Alec: amcgail2@gmail.com
-  """
+  goal = "to create a single new event on Alec's calendar."
+  detailed_instructions = flatten_whitespace("""
+    No need to invite Alec, you are creating events on his calendar.
+    When scheduling, be careful not to conflict with pre-existing events!
+    Check that there is no other prior event which conflicts with your new event.
+  """)
   params = """
     {
-      'summary': 'short description of the event',
-      'location': 'location of the event',
-      'description': 'longer description of the event',
-      'start': {
-        'dateTime': 'start time of the event',
-        'timeZone': 'America/New_York',
+      "summary": "short description of the event",
+      "location": "location of the event",
+      "description": "longer description of the event",
+      "start": {
+        "dateTime": "start time of the event",
+        "timeZone": "America/New_York"
       },
-      'end': {
-        'dateTime': 'end time of the event',
-        'timeZone': 'America/New_York',
+      "end": {
+        "dateTime": "end time of the event",
+        "timeZone": "America/New_York"
       },
-      'attendees': [
-        {'email': 'email of attendee 1'},
-        {'email': 'email of attendee 2'},
-        ...
-      ]
+      "attendees": [] # never include attendees, please
     }
   """
 
@@ -117,8 +141,12 @@ class NewEvent(Module):
     # add time-zone information
     tz1 = pytz.timezone(args['start']['timeZone'])
     tz2 = pytz.timezone(args['end']['timeZone'])
-    start_time = tz1.localize(start_time)
-    end_time = tz2.localize(end_time)
+
+    # if the time zone is not specified, assume it is EST
+    if start_time.tzinfo is None:
+      start_time = tz1.localize(start_time)
+    if end_time.tzinfo is None:
+      end_time = tz2.localize(end_time)
 
     summary = args['summary']
     description = args['description']
@@ -126,6 +154,7 @@ class NewEvent(Module):
     attendees = [attendee['email'] for attendee in args['attendees']]
 
     create_event(service, start_time, end_time, summary, description, location, attendees)
+    return "Event created: {start_time:%m-%d %H:%M} {end_time:%m-%d %H:%M} {summary}".format(start_time=start_time, summary=summary, end_time=end_time)
 
 
 def list_all_calendars(service):
@@ -161,7 +190,7 @@ def create_event(service, start_time, end_time, summary, description, location, 
         },
     }
 
-    event = service.events().insert(calendarId='primary', body=event).execute()
+    event = service.events().insert(calendarId='amcgail2@gmail.com', body=event).execute()
     print(f"Event created: {event.get('htmlLink')}")
 
 
