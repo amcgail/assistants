@@ -1,4 +1,5 @@
-from ..common import * 
+from modularity import *
+
 import requests 
 class StockTickerValue(Module): 
     description = "This module fetches the current value of a given stock ticker." 

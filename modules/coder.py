@@ -1,4 +1,4 @@
-from ..common import *
+from modularity import *
 
 new_module_template = Path(__file__).parent / "new_module_template.py"
 with open(new_module_template) as f:

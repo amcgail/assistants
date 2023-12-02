@@ -1,4 +1,4 @@
-from ..common import *
+from modularity import *
 
 class SummarizeText(Module):
     description = "This module summarizes long text."
@@ -30,7 +30,7 @@ class WriteEssay(Module):
                     "Section 2 paragraph 2 description",
                     "Section 3 paragraph 3": {
                         "Section 3 paragraph 3 sub-paragraph 1",
-                        "Section 3 paragraph 3 sub-paragraph 2",
+                        "Section 3 paragraph 3 sub-paragraph 2"
                     }
                 },
                 "Conclusion": []
@@ -62,6 +62,7 @@ class WriteEssay(Module):
             for a in args:
                 r = self._execute_it(a)
                 parts.append(r)
+
             return "\n".join(parts)
         
         elif type(args) == dict:
@@ -82,7 +83,7 @@ class WriteEssay(Module):
             prompt = "Overview of the whole essay:\n{description}\n\n"
             prompt += "Description of paragraph you are writing:\n{args}"
             if len(summ):
-                prompt += "\n\nA summary of what you've written so far:\n{summ}"
+                prompt += "\n\nA summary of sections you've written so far:\n{summ}"
             prompt = prompt.format(args=args, summ=summ, description=self.description)
 
             result = smaller_writer.contemplate(prompt)
@@ -103,7 +104,7 @@ class WriteSection(SubModule):
     params = """
         {
             "full content": "Full content of the section.",
-            "summary": "Summary of the section.",
+            "summary": "Summary of the section."
         }
     """
 

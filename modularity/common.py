@@ -12,8 +12,7 @@ from dotenv import load_dotenv
 dotenv_path = os.path.join(os.path.dirname(__file__), '.env')
 load_dotenv(dotenv_path=dotenv_path)
 
-openai_api_key = os.environ.get('OPENAI_API_KEY')
-print('openai_api_key', openai_api_key)
+client = OpenAI()
 
 def indent(text, amount=4, ch=' '):
     lines = text.splitlines()
@@ -36,6 +35,5 @@ def flatten_whitespace(text):
     text = '\n'.join(line[min(spaces):] for line in lines)
     return text
 
-oai_client = OpenAI(api_key=openai_api_key)
-
-from .modules import Module, SubModule
+from .modules import *
+from .tools import *

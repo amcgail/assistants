@@ -1,5 +1,4 @@
-from ..common import *
-from . import Module
+from modularity import *
 
 import datetime as dt
 

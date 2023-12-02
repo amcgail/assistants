@@ -1,4 +1,4 @@
-from ..common import *
+from modularity import *
 
 class SendEmail(Module):
     goal = "to send an email"
