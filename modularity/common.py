@@ -8,12 +8,14 @@ import importlib, inspect
 import json
 import datetime as dt
 
+BASE_DIR = os.path.dirname(__file__)
+
 from dotenv import load_dotenv
-dotenv_path_here = os.path.join(os.path.dirname(__file__), '.env')
+dotenv_path_here = os.path.join(BASE_DIR, '.env')
 if os.path.exists(dotenv_path_here):
     load_dotenv(dotenv_path=dotenv_path_here)
 else:
-    load_dotenv()
+    load_dotenv('.env')
 
 client = OpenAI()
 

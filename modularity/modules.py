@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from .common import flatten_whitespace, dt, indent, client, inspect, Path, json
 
 class Module:
     def __init__(self, debug=False, meta_goal=None, meta_info=None):
