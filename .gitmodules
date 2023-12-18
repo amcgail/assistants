@@ -1,0 +1,3 @@
+#[submodule "modularity/scihub.py"]
+#	path = modularity/scihub.py
+#	url = https://github.com/zaytoun/scihub.py
